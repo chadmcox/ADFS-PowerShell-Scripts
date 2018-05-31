@@ -1,7 +1,7 @@
 #Requires -Version 4
 <#PSScriptInfo
 
-.VERSION 0.6
+.VERSION 0.7
 
 .GUID 211b41f9-0d95-413c-920f-50b53b33633d
 
@@ -59,20 +59,21 @@ function CollectSecurity516Events{
     $_time_filter = (Get-Date).AddHours(-1)
     $_xml_lockout_adfs = "<QueryList><Query Id=""0"" Path=""Security""><Select Path=""Security"">*[System[Provider[@Name='AD FS Auditing'] and (EventID=516)]]</Select></Query></QueryList>"
     
-
+    $events = @()
     $results = Get-WinEvent -FilterXml $_xml_lockout_adfs | where {$_.TimeCreated -ge $_time_filter}
     $results | foreach {
         $_ip = $_.Properties[2].Value
         $_ip = $_ip.split(",")
         $_ip = $_ip[0]
         if($_ip -match "\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}"){
-            $_ | select `
+             $events += $_ | select `
                 @{name='Account';expression={$($_.Properties[1].Value)}}
                 @{name='ExternalIP';expression={$_ip}}
                 @{name='ClassBSubnet';expression={"$((($_ip).split("."))[0]).$((($_ip).split("."))[0]).0.0"}}
                 @{name='DateTime';expression={"$($_.Properties[4].Value) $($_.Properties[5].Value)"}}
         }
     }
+    $events
 }
 Function format-perf{
     [cmdletbinding()]
