@@ -116,4 +116,4 @@ import-csv "$reportpath\516Events.csv" | group Account | select name,count | `
 import-csv "$reportpath\516Events.csv" | group ClassBSubnet | select name,count | `
     export-csv "$reportpath\subnetlockoutsummary.csv"
 import-csv "$reportpath\516Events.csv" | group DateTime | select name,count | `
-    export-csv "$reportpath\subnetlockoutsummary.csv"
+    export-csv "$reportpath\datelockoutsummary.csv"
