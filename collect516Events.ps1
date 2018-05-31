@@ -1,7 +1,7 @@
 #Requires -Version 4
 <#PSScriptInfo
 
-.VERSION 0.1
+.VERSION 0.2
 
 .GUID 211b41f9-0d95-413c-920f-50b53b33633d
 
@@ -57,10 +57,11 @@ If (!($(Try { Test-Path  $reportpath } Catch { $true }))){
 
 function CollectSecurity516Events{
     $_time_filter = (Get-Date).AddHours(-1)
-    $_xml_lockout_adfs = "<QueryList>
-                            <Query Id=""0"" Path=""ForwardedEvents""><Select Path=""ForwardedEvents"">*[System[Provider[@Name='AD FS Auditing'] and (EventID=516)]]</Select>
-                            </Query>
-                          </QueryList>"#>
+    $_xml_lockout_adfs = '<QueryList> 
+	                        	<Query Id="1" Path="Security">
+		                            <Select Path="Security">*[System[(EventID=516)]]</Select>
+	                            </Query>
+                        </QueryList>'
     
     $_time_filter 
     $results = Get-WinEvent -FilterXml $_xml_lockout_adfs | where {$_.TimeCreated -ge $_time_filter}
