@@ -58,9 +58,8 @@ If (!($(Try { Test-Path  $reportpath } Catch { $true }))){
 function CollectSecurity516Events{
     $_time_filter = (Get-Date).AddHours(-1)
     $_xml_lockout_adfs = '<QueryList> 
-	                        	<Query Id="1" Path="Security">
-		                            <Select Path="Security">*[System[(EventID=516)]]</Select>
-	                            </Query>
+                            <Query Id="1" Path="Security"><Select Path="Security">*[System[(EventID=516)]]</Select>
+                            </Query>
                         </QueryList>'
     
     $_time_filter 
