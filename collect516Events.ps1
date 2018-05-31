@@ -1,7 +1,7 @@
 #Requires -Version 4
 <#PSScriptInfo
 
-.VERSION 0.2
+.VERSION 0.3
 
 .GUID 211b41f9-0d95-413c-920f-50b53b33633d
 
@@ -57,10 +57,7 @@ If (!($(Try { Test-Path  $reportpath } Catch { $true }))){
 
 function CollectSecurity516Events{
     $_time_filter = (Get-Date).AddHours(-1)
-    $_xml_lockout_adfs = '<QueryList> 
-                            <Query Id="1" Path="Security"><Select Path="Security">*[System[(EventID=516)]]</Select>
-                            </Query>
-                        </QueryList>'
+    $_xml_lockout_adfs = "<QueryList><Query Id=""0"" Path=""Security""><Select Path=""Security"">*[System[Provider[@Name='AD FS Auditing'] and (EventID=516)]]</Select></Query></QueryList>"
     
     $_time_filter 
     $results = Get-WinEvent -FilterXml $_xml_lockout_adfs | where {$_.TimeCreated -ge $_time_filter}
@@ -109,6 +106,6 @@ function CollectADFSPerf{
     format-perf -countersample $_}
 }
 
-CollectSecurity516Events | export-csv "$eventlog\516Events.csv" -Append -NoTypeInformation
-CollectADFSPerf | export-csv "$eventlog\adfsperfcounters.csv" -append -NoTypeInformation
+CollectSecurity516Events | export-csv "$reportpath\516Events.csv" -Append -NoTypeInformation
+CollectADFSPerf | export-csv "$reportpath\adfsperfcounters.csv" -append -NoTypeInformation
 
