@@ -62,15 +62,15 @@ function CollectSecurity516Events{
     $_time_filter 
     $results = Get-WinEvent -FilterXml $_xml_lockout_adfs | where {$_.TimeCreated -ge $_time_filter}
     $results | foreach {
-        $_ip = $_.Properties[2].Value
+        $_ip = $_.Properties[4].Value
         $_ip = $_ip.split(",")
         $_ip = $_ip[0]
         if($_ip -match "\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}"){
             $_ | select `
-                @{name='Account';expression={$($_.Properties[1].Value)}}
+                @{name='Account';expression={$($_.Properties[3].Value)}}
                 @{name='ExternalIP';expression={$_ip}}
                 @{name='ClassBSubnet';expression={"$((($_ip).split("."))[0]).$((($_ip).split("."))[0]).0.0"}}
-                @{name='DateTime';expression={"$($_.Properties[4].Value) $($_.Properties[5].Value)"}}
+                @{name='DateTime';expression={"$($_.Properties[0].Value) $($_.Properties[1].Value)"}}
         }
     }
 }
