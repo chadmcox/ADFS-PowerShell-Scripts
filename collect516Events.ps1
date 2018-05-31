@@ -1,7 +1,7 @@
 #Requires -Version 4
 <#PSScriptInfo
 
-.VERSION 0.7
+.VERSION 0.9
 
 .GUID 211b41f9-0d95-413c-920f-50b53b33633d
 
@@ -67,10 +67,11 @@ function CollectSecurity516Events{
         $_ip = $_ip[0]
         if($_ip -match "\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}"){
              $events += $_ | select `
-                @{name='Account';expression={$($_.Properties[1].Value)}}
-                @{name='ExternalIP';expression={$_ip}}
-                @{name='ClassBSubnet';expression={"$((($_ip).split("."))[0]).$((($_ip).split("."))[0]).0.0"}}
-                @{name='DateTime';expression={"$($_.Properties[4].Value) $($_.Properties[5].Value)"}}
+                @{name='Account';expression={$($_.Properties[1].Value)}},`
+                @{name='ExternalIP';expression={$_ip}},`
+                @{name='ClassBSubnet';expression={"$((($_ip).split("."))[0]).$((($_ip).split("."))[1]).0.0"}},`
+                @{name='DateTime';expression={"$($_.Properties[4].Value)"}},`
+                @{name='TimeCreated';expression={$_.TimeCreated}}
         }
     }
     $events
@@ -110,3 +111,9 @@ function CollectADFSPerf{
 CollectSecurity516Events | export-csv "$reportpath\516Events.csv" -Append -NoTypeInformation
 CollectADFSPerf | export-csv "$reportpath\adfsperfcounters.csv" -append -NoTypeInformation
 
+import-csv "$reportpath\516Events.csv" | group Account | select name,count | `
+    export-csv "$reportpath\userlockoutsummary.csv"
+import-csv "$reportpath\516Events.csv" | group ClassBSubnet | select name,count | `
+    export-csv "$reportpath\subnetlockoutsummary.csv"
+import-csv "$reportpath\516Events.csv" | group DateTime | select name,count | `
+    export-csv "$reportpath\subnetlockoutsummary.csv"
