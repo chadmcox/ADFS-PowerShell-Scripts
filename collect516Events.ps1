@@ -1,7 +1,7 @@
 #Requires -Version 4
 <#PSScriptInfo
 
-.VERSION 0.4
+.VERSION 0.5
 
 .GUID 211b41f9-0d95-413c-920f-50b53b33633d
 
@@ -54,7 +54,7 @@ If (!($(Try { Test-Path  $reportpath } Catch { $true }))){
     new-Item  $reportpath -ItemType "directory"  -force
 }
 
-
+$_time_filter = (Get-Date).AddHours(-1)
 function CollectSecurity516Events{
     $_time_filter = (Get-Date).AddHours(-1)
     $_xml_lockout_adfs = "<QueryList><Query Id=""0"" Path=""Security""><Select Path=""Security"">*[System[Provider[@Name='AD FS Auditing'] and (EventID=516)]]</Select></Query></QueryList>"
