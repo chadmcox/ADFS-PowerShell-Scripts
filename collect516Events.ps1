@@ -1,7 +1,7 @@
 #Requires -Version 4
 <#PSScriptInfo
 
-.VERSION 0.9
+.VERSION 0.10
 
 .GUID 211b41f9-0d95-413c-920f-50b53b33633d
 
@@ -62,6 +62,12 @@ function CollectSecurity516Events{
     $events = @()
     $results = Get-WinEvent -FilterXml $_xml_lockout_adfs | where {$_.TimeCreated -ge $_time_filter}
     $results | foreach {
+        $useragentString = $null
+        if($($_.Properties[0].Value) -ne "00000000-0000-0000-0000-000000000000"){
+            $_operation_id_adfs = $_.Properties[0].Value
+            $_xml_lockout_adfs_useragent = "<QueryList><Query Id=""0"" Path=""Security""><Select Path=""Security"">*[System[Provider[@Name='AD FS Auditing'] and (EventID=403)]] and *[ EventData[ Data and (Data='$_operation_id_adfs') ] ]</Select></Query></QueryList>"
+            $useragentString = (Get-WinEvent -ComputerName $_server -FilterXml $_xml_lockout_adfs_useragent -MaxEvents 1).Properties[8].Value
+        }
         $_ip = $_.Properties[2].Value
         $_ip = $_ip.split(",")
         $_ip = $_ip[0]
@@ -71,7 +77,14 @@ function CollectSecurity516Events{
                 @{name='ExternalIP';expression={$_ip}},`
                 @{name='ClassBSubnet';expression={"$((($_ip).split("."))[0]).$((($_ip).split("."))[1]).0.0"}},`
                 @{name='DateTime';expression={"$($_.Properties[4].Value)"}},`
-                @{name='TimeCreated';expression={$_.TimeCreated}}
+                @{name='TimeCreated';expression={$_.TimeCreated}},`
+                @{name='Activity';expression={$($_.Properties[0].Value)}},`
+                @{name='UserAgentString';expression={$useragentString}}
+                
+       Get-WinEvent -ComputerName $_server -FilterXml $_xml_lockout_adfs_useragent -MaxEvents 1 | ForEach-Object `
+        {
+               #Display the UserAgent
+               Write-Output "UserAgent:`t$($_.Properties[8].Value)"
         }
     }
     $events
@@ -112,8 +125,8 @@ CollectSecurity516Events | export-csv "$reportpath\516Events.csv" -Append -NoTyp
 CollectADFSPerf | export-csv "$reportpath\adfsperfcounters.csv" -append -NoTypeInformation
 
 import-csv "$reportpath\516Events.csv" | group Account | select name,count | `
-    export-csv "$reportpath\userlockoutsummary.csv"
+    export-csv "$reportpath\userlockoutsummary.csv" -NoTypeInformation
 import-csv "$reportpath\516Events.csv" | group ClassBSubnet | select name,count | `
-    export-csv "$reportpath\subnetlockoutsummary.csv"
+    export-csv "$reportpath\subnetlockoutsummary.csv" -NoTypeInformation
 import-csv "$reportpath\516Events.csv" | group DateTime | select name,count | `
-    export-csv "$reportpath\datelockoutsummary.csv"
+    export-csv "$reportpath\datelockoutsummary.csv" -NoTypeInformation
