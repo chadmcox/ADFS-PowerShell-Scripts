@@ -1,7 +1,7 @@
 #Requires -Version 4
 <#PSScriptInfo
 
-.VERSION 0.10
+.VERSION 0.11
 
 .GUID 211b41f9-0d95-413c-920f-50b53b33633d
 
@@ -66,7 +66,7 @@ function CollectSecurity516Events{
         if($($_.Properties[0].Value) -ne "00000000-0000-0000-0000-000000000000"){
             $_operation_id_adfs = $_.Properties[0].Value
             $_xml_lockout_adfs_useragent = "<QueryList><Query Id=""0"" Path=""Security""><Select Path=""Security"">*[System[Provider[@Name='AD FS Auditing'] and (EventID=403)]] and *[ EventData[ Data and (Data='$_operation_id_adfs') ] ]</Select></Query></QueryList>"
-            $useragentString = (Get-WinEvent -ComputerName $_server -FilterXml $_xml_lockout_adfs_useragent -MaxEvents 1).Properties[8].Value
+            $useragentString = (Get-WinEvent -FilterXml $_xml_lockout_adfs_useragent -MaxEvents 1).Properties[8].Value
         }
         $_ip = $_.Properties[2].Value
         $_ip = $_ip.split(",")
@@ -80,11 +80,6 @@ function CollectSecurity516Events{
                 @{name='TimeCreated';expression={$_.TimeCreated}},`
                 @{name='Activity';expression={$($_.Properties[0].Value)}},`
                 @{name='UserAgentString';expression={$useragentString}}
-                
-       Get-WinEvent -ComputerName $_server -FilterXml $_xml_lockout_adfs_useragent -MaxEvents 1 | ForEach-Object `
-        {
-               #Display the UserAgent
-               Write-Output "UserAgent:`t$($_.Properties[8].Value)"
         }
     }
     $events
