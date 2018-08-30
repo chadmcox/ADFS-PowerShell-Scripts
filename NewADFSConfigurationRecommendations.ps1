@@ -17,17 +17,34 @@ get-adfsproperties | select certificateduration
 
 #Enable expiry claim
 #https://blogs.msdn.microsoft.com/samueld/2015/05/13/adfs-2012-r2-now-supports-password-change-not-reset-across-all-devices/
+#enable password change endpoint
+Get-AdfsEndpoint -AddressPath /adfs/portal/updatepassword/ | Enable-AdfsEndpoint
+Get-AdfsEndpoint -AddressPath /adfs/portal/updatepassword/
+
+#add password expiry claim
 $rptName = "Microsoft Office 365 Identity Platform"
 if(Get-AdfsRelyingPartyTrust $rptName){
     $msolId = "urn:federation:MicrosoftOnline" 
     $rptRules = (Get-AdfsRelyingPartyTrust -Identifier $msolId).IssuanceTransformRules 
-    $newRule = '@RuleTemplate = "LdapClaims" @RuleName = "UPN Claim Rule" c1:[Type == "http://schemas.microsoft.com/ws/2012/01/passwordexpirationtime"] => issue(store = "_PasswordExpiryStore", types = ("http://schemas.microsoft.com/ws/2012/01/passwordexpirationtime","http://schemas.microsoft.com/ws/2012/01/passwordexpirationdays","http://schemas.microsoft.com/ws/2012/01/passwordchangeurl"), query = "{0};", param = c1.Value);' 
+    $newRule = '@RuleName = "Issue Password Expiry Claims" c1:[Type == "http://schemas.microsoft.com/ws/2012/01/passwordexpirationtime"] => issue(store = "_PasswordExpiryStore", types = ("http://schemas.microsoft.com/ws/2012/01/passwordexpirationtime", "http://schemas.microsoft.com/ws/2012/01/passwordexpirationdays", "http://schemas.microsoft.com/ws/2012/01/passwordchangeurl"), query = "{0};", param = c1.Value);'
     $rptRules = $rptRules + $newRule 
     Set-AdfsRelyingPartyTrust -TargetName $rptName -IssuanceTransformRules $rptRules
 }
+#validate
+(Get-AdfsRelyingPartyTrust $rptName).IssuanceTransformRules
 
 #enable MFA Claim on O365 
 #https://blogs.technet.microsoft.com/cloudpfe/2017/03/15/multiple-mfa-prompts-connecting-to-office-365/
+$rptName = "Microsoft Office 365 Identity Platform"
+if(Get-AdfsRelyingPartyTrust $rptName){
+    $msolId = "urn:federation:MicrosoftOnline" 
+    $rptRules = (Get-AdfsRelyingPartyTrust -Identifier $msolId).IssuanceTransformRules 
+    $newRule = '@RuleName = "Issue Password Expiry Claims" c1:[Type == "http://schemas.microsoft.com/ws/2012/01/passwordexpirationtime"] => issue(store = "_PasswordExpiryStore", types = ("http://schemas.microsoft.com/ws/2012/01/passwordexpirationtime", "http://schemas.microsoft.com/ws/2012/01/passwordexpirationdays", "http://schemas.microsoft.com/ws/2012/01/passwordchangeurl"), query = "{0};", param = c1.Value);'
+    $rptRules = $rptRules + $newRule 
+    Set-AdfsRelyingPartyTrust -TargetName $rptName -IssuanceTransformRules $rptRules
+}
+#validate
+(Get-AdfsRelyingPartyTrust $rptName).IssuanceTransformRules
 
 #enable Logging
 # This will Add the audit settings to your existing settings
