@@ -39,7 +39,7 @@ $rptName = "Microsoft Office 365 Identity Platform"
 if(Get-AdfsRelyingPartyTrust $rptName){
     $msolId = "urn:federation:MicrosoftOnline" 
     $rptRules = (Get-AdfsRelyingPartyTrust -Identifier $msolId).IssuanceTransformRules 
-    $newRule = '@RuleName = "Issue Password Expiry Claims" c1:[Type == "http://schemas.microsoft.com/ws/2012/01/passwordexpirationtime"] => issue(store = "_PasswordExpiryStore", types = ("http://schemas.microsoft.com/ws/2012/01/passwordexpirationtime", "http://schemas.microsoft.com/ws/2012/01/passwordexpirationdays", "http://schemas.microsoft.com/ws/2012/01/passwordchangeurl"), query = "{0};", param = c1.Value);'
+    $newRule = '@RuleName = '@RuleTemplate = "PassThroughClaims" @RuleName = "Pass Through MFA Claims" c:[Type == "http://schemas.microsoft.com/claims/authnmethodsreferences"] => issue(claim = c);'
     $rptRules = $rptRules + $newRule 
     Set-AdfsRelyingPartyTrust -TargetName $rptName -IssuanceTransformRules $rptRules
 }
