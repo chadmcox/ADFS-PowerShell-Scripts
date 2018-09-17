@@ -7,7 +7,7 @@ $DebugPreference = "Continue"
 
 $_event_Logs = "Application", "System", "AD FS/Admin", "DRS/Admin"
 $_event_log_from = (Get-Date) - (New-TimeSpan -Day 75)
-#$_servers = "az18w1235","az18w1236","az18w1237"
+#$_servers = "s1","s2","s3"
 $_servers = "corp-adfs1"
 
 $_counters = "\Processor(_total)\% Processor Time","\Memory\Available MBytes","\AD FS\*","\LogicalDisk(_total)\*","Netlogon(*)\*","\TCPv4\*"
