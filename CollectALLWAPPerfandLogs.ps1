@@ -5,7 +5,7 @@ $DebugPreference = "Continue"
 
 $_event_Logs = "Application", "System", "AD FS/Admin"
 $_event_log_from = (Get-Date) - (New-TimeSpan -Day 5)
-$_servers = "az18w1457","az18w1458","az18w1459"
+$_servers = "svr1","srv2","srv3"
 $_counters = "\Processor(_total)\% Processor Time","\Memory\Available MBytes","\AD FS Proxy\*","\LogicalDisk(_total)\*","Netlogon(*)\*","\TCPv4\*"
 $_sample = 300
 
