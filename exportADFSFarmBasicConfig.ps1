@@ -1,4 +1,4 @@
-#
+<#
     This code is Copyright (c) 2016 Microsoft Corporation.
 
     All rights reserved.
