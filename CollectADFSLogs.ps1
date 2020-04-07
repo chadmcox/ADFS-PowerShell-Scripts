@@ -1,7 +1,7 @@
 #requires -version 4.0
 <#PSScriptInfo
 
-.VERSION 0.1
+.VERSION 2020.4.7
 
 .GUID 1b77c367-a9b9-4182-b671-1ca70b9f95e1
 
@@ -42,7 +42,7 @@ function CollectEventLogs{
         foreach ($eventLogName in $eventLogNames)
         {
             write-host "collect Event logs $eventLogName"
-            $_event_log_from = (Get-Date) - (New-TimeSpan -Day 60)
+            $_event_log_from = (Get-Date) - (New-TimeSpan -Day 5)
             $defaultFile = $reportpath + "\" + $env:computername + "_evt_" + $($eventLogName -replace "/","_") + ".csv"
             #Get-EventLog $eventLogName -After ((Get-Date).date).addDays(-60) | Select-Object TimeGenerated, MachineName, EventID, Source, EntryType, @{n= "Message";e={ ($_.Message -Replace “`r`n|`r|`n”,” ”).Trim() }} | Export-Csv $defaultFile -NoTypeInformation 
             Get-WinEvent -FilterHashTable @{LogName=$eventLogName; StartTime=$_event_log_from} -ErrorAction SilentlyContinue | Select-Object Machinename, TimeCreated, ID, UserId,LevelDisplayName,ProviderName, @{n= "Message";e={ ($_.Message -Replace “`r`n|`r|`n”,” ”).Trim() }} | Export-Csv $defaultFile -NoTypeInformation 
@@ -124,6 +124,14 @@ function CollectWindowsServerDetails{
         $defaultFile = "$reportpath\$($env:computername)_whoami.txt"
         whoami /all | out-file $defaultFile
 
+        write-host "TlsCipherSuite "
+        $defaultFile = "$reportpath\$($env:computername)_TlsCipherSuite.txt"
+        (Get-TlsCipherSuite).name | out-file $defaultFile
+
+        write-host "SecurityProtocols"
+        $defaultFile = "$reportpath\$($env:computername)_SecurityProtocols.txt"
+        #https://docs.microsoft.com/en-us/windows/win32/secauthn/protocols-in-tls-ssl--schannel-ssp-
+        [Net.ServicePointManager]::SecurityProtocol | out-file $defaultFile
 
         write-host "time data"
         $defaultFile = "$reportpath\$($env:computername)_time.txt"
@@ -162,6 +170,11 @@ function CollectWindowsServerDetails{
         Get-PhysicalDisk | export-csv $defaultFile
         $defaultFile = "$reportpath\$($env:computername)_disk_reliability_counter.csv"
         Get-PhysicalDisk | Get-StorageReliabilityCounter | export-csv $defaultFile
+
+        write-host "group policy changes"
+        $defaultFile = "$reportpath\$($env:computername)_group_policy_changes.csv"
+        Get-WinEvent -FilterHashTable @{LogName="Microsoft-Windows-GroupPolicy/Operational";id=4016} | Select Machinename, TimeCreated, ID, @{n= "Message";e={ ($_.Message -Replace “`r`n|`r|`n”,” ”).Trim() }} 
+
     }
 }
 function CollectServerPerformance{
@@ -363,8 +376,9 @@ function archive_results{
 #endregion
 
 
-$_perf_counters = "\AD FS Proxy\*","\AD FS Proxy\*","\Memory\*","\PhysicalDisk(*)\*","\Process(*)\*","\Processor(*)\*","\TCPv4\*"
-$eventLogNames = "Application", "Security","System","Windows PowerShell","AD FS/Admin","Microsoft-Windows-PowerShell/Operational","Microsoft-Windows-CAPI2/Operational"
+$_perf_counters = "\AD FS\*","\AD FS Proxy\*","\Memory\*","\PhysicalDisk(*)\*","\Process(*)\*","\Processor(*)\*","\TCPv4\*"
+$eventLogNames = "Application", "Security","System","Windows PowerShell","AD FS/Admin","Microsoft-Windows-PowerShell/Operational","Microsoft-Windows-CAPI2/Operational","Microsoft-Windows-GroupPolicy/Operational"
+
 
 write-host "Creating folder structure"
 
@@ -376,8 +390,7 @@ If (!($(Try { Test-Path $reportpath } Catch { $true }))){
 
 $DebugPreference = "Continue"
 
-if($(try{(Get-WindowsFeature -Name ADFS-Federation).installed -eq $true}catch{$false})){
-    
+if(Get-WindowsFeature -Name "ADFS-Federation","Web-Application-Proxy" | where installed -eq $true){
     CollectRegistryValues
     CollectWindowsServerDetails
     CollectServerPerformance
