@@ -173,7 +173,7 @@ function CollectWindowsServerDetails{
 
         write-host "group policy changes"
         $defaultFile = "$reportpath\$($env:computername)_group_policy_changes.csv"
-        Get-WinEvent -FilterHashTable @{LogName="Microsoft-Windows-GroupPolicy/Operational";id=4016} | Select Machinename, TimeCreated, ID, @{n= "Message";e={ ($_.Message -Replace “`r`n|`r|`n”,” ”).Trim() }} 
+        Get-WinEvent -FilterHashTable @{LogName="Microsoft-Windows-GroupPolicy/Operational";id=4016} | Select Machinename, TimeCreated, ID, @{n= "Message";e={ ($_.Message -Replace “`r`n|`r|`n”,” ”).Trim() }} | export-csv $defaultFile -notypeinformation
 
     }
 }
